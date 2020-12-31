@@ -1,13 +1,16 @@
-import cs50
+# import cs50
+import sqlite3
 import csv
 
 # Create database
 open("shows4.db", "w").close()
-db = cs50.SQL("sqlite:///shows4.db")
+# db = cs50.SQL("sqlite:///shows4.db")
+conn = sqlite3.connect('shows4.db')
+c = conn.cursor()
 
 # Create tables
-db.execute("CREATE TABLE shows (id INT, title TEXT, year NUMERIC, PRIMARY KEY(id))")
-db.execute("CREATE TABLE genres (show_id INT, genre TEXT, FOREIGN KEY(show_id) REFERENCES shows(id))")
+c.execute("CREATE TABLE shows (id INT, title TEXT, year NUMERIC, PRIMARY KEY(id))")
+c.execute("CREATE TABLE genres (show_id INT, genre TEXT, FOREIGN KEY(show_id) REFERENCES shows(id))")
 
 # Open TSV file
 # https://datasets.imdbws.com/title.basics.tsv.gz
@@ -32,11 +35,20 @@ with open("title.basics.tsv", "r") as titles:
                     # Trim prefix from tconst
                     id = int(row["tconst"][2:])
 
+                    show_data = [id, row["primaryTitle"], startYear]
                     # Insert show
-                    db.execute("INSERT INTO shows (id, title, year) VALUES(?, ?, ?)", id, row["primaryTitle"], startYear)
+                    c.execute("INSERT INTO shows (id, title, year) VALUES(?, ?, ?)",
+                              show_data)
 
                     # Insert genres
                     if row["genres"] != "\\N":
                         for genre in row["genres"].split(","):
-                            db.execute("INSERT INTO genres (show_id, genre) VALUES(?, ?)", id, genre)
+                            genres_data = [id, genre]
+                            c.execute(
+                                "INSERT INTO genres (show_id, genre) VALUES(?, ?)", genres_data)
 
+# Save (commit) the changes
+conn.commit()
+
+# close the connection
+conn.close()
