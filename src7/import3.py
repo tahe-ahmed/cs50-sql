@@ -1,12 +1,15 @@
-import cs50
+# import cs50
+import sqlite3
 import csv
 
 # Create database
 open("shows3.db", "w").close()
-db = cs50.SQL("sqlite:///shows3.db")
+# db = cs50.SQL("sqlite:///shows3.db")
+conn = sqlite3.connect('shows3.db')
+c = conn.cursor()
 
 # Create table
-db.execute("CREATE TABLE shows (tconst TEXT, primaryTitle TEXT, startYear NUMERIC, genres TEXT)")
+c.execute("CREATE TABLE shows (tconst TEXT, primaryTitle TEXT, startYear NUMERIC, genres TEXT)")
 
 # Open TSV file
 # https://datasets.imdbws.com/title.basics.tsv.gz
@@ -31,6 +34,15 @@ with open("title.basics.tsv", "r") as titles:
                     # Remove \N from genres
                     genres = row["genres"] if row["genres"] != "\\N" else None
 
+                    insert_data = [row["tconst"],
+                                   row["primaryTitle"], startYear, genres]
+
                     # Insert show
-                    db.execute("INSERT INTO shows (tconst, primaryTitle, startYear, genres) VALUES(?, ?, ?, ?)",
-                               row["tconst"], row["primaryTitle"], startYear, genres)
+                    c.execute("INSERT INTO shows (tconst, primaryTitle, startYear, genres) VALUES(?, ?, ?, ?)",
+                              insert_data)
+
+# Save (commit) the changes
+conn.commit()
+
+# close the connection
+conn.close()
